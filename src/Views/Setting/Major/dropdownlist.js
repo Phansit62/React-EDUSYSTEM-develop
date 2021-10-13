@@ -16,7 +16,7 @@ export default function Dropdownlist(props) {
   
     return (
         <>
-            <select  onChange={props.getValue} className="form-select" name="facultyCode" aria-label="Default select example">
+            <select value={props.values}  onChange={props.getValue} className="form-select" name="facultyCode" aria-label="Default select example">
                 <option selected>Open this select menu</option>
                 {data.map((value,index) => (
                     <option  value={value.facultyCode}>{value.facultyName}</option>

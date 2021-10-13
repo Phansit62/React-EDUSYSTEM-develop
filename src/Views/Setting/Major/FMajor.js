@@ -139,7 +139,7 @@ class FMajor extends Component {
                         </div>
                       </div>
 
-                      <DropdownList getValue={handleChange} />
+                      <DropdownList values={values.facultyCode} getValue={handleChange} />
 
                       {
                         <div className="form-group row">
