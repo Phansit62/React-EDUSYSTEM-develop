@@ -15,7 +15,10 @@ import ShowStudent from "../Views/Setting/Student/ShowStudent";
 import ShowFaculty from "../Views/Setting/Faculty/ShowFaculty";
 import FFaculty from "../Views/Setting/Faculty/FFaculty";
 import Showteacher from "../Views/Setting/Teachers/ShowTeacher"
+import FTeacher from "../Views/Setting/Teachers/FTeacher"
 import FMajor from "../Views/Setting/Major/FMajor"
+// import Profile from "../View/Profile/Profile"
+
 function Routers(props) {
   return (
     <Router>
@@ -30,8 +33,10 @@ function Routers(props) {
               <Route path="/showFaculty" component={ShowFaculty} />
               <Route path="/showStudent" component={ShowStudent} />
               <Route path="/showTeacher" component={Showteacher} />
+              <Route path="/FTeacher" component={FTeacher} />
               <Route path="/FFaculty" component={FFaculty} />
               <Route path="/FMajor" component={FMajor} />
+              {/* <Route path="/Profile" component={Profile} /> */}
             </Switch>
           </PrivateLayout>
         </Route>

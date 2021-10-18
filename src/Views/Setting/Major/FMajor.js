@@ -1,7 +1,7 @@
 import React from "react";
 import { Fragment,Component ,useState, useEffect } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
-import { SaveMajor, UpdateMajor,GetFacultysList } from "../../../services/major.service";
+import { SaveMajor, UpdateMajor } from "../../../services/major.service";
 import DropdownList from "./dropdownlist"
 
 import Swal from "sweetalert2";

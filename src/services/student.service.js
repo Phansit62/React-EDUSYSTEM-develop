@@ -15,3 +15,13 @@ export async function GetAllStudent(pageSize, currentPage) {
     console.log("error", error);
   }
 }
+export async function SaveStudent(data){
+  try{
+    const response = await Instance.post(URLLOCAL + "Students/SaveStudent",
+    data);
+    return await response.data;
+  }
+  catch(error){
+    console.log(error.response.request._response);
+  }
+}
