@@ -1,97 +1,143 @@
 import React from "react";
-import { SaveStudent } from "../../services/student.service";
-import { Formik, Form, ErrorMessage } from "formik";
+import { Formik, Form, Field , ErrorMessage } from "formik";
+import DropdownList from "../../components/DropdownList";
+import { monthTH } from "../../Data/month-th.json";
 import Swal from "sweetalert2";
+import SearchAddress from "../../components/SearchAddress";
+import { SaveStudent, UpdateStudent } from "../../services/student.service";
+import validateStudent from "../Setting/Student/ValidateStudent";
 
+import Input from "../../components/Input";
 
 export default class Profile extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
-      StdId: 0,
-      TitleId: "",
-      Name: "",
-      Lastname: "",
-      Birtday: null,
-      Phone: "",
-      Email: "",
-      Address: "",
-      DistrictId: 0,
-      Amphur: 0,
-      Province: 0,
-      Postcode: 0,
-      Username: ""
+      stdId: "",
+      titleId: 0,
+      name: "",
+      lastname: "",
+      birtday: null,
+      phone: "",
+      email: "",
+      address: "",
+      district: "",
+      amphur: "",
+      province: "",
+      postcode: "",
+      username: "",
+      password:"",
+      salt:"",
+      title: [],
+      year: "",
+      month:"",
+      day:"",
+      confirm:""
     };
   }
 
-  year = new Date().getFullYear();
-  years = Array.from(new Array(5), (e, index) => this.year - index)
-  month = [
-    {key:1,value:"January"},
-    {key:2,value:"February"},
-    {key:3,value:"March"},
-    {key:4,value:"April"},
-    {key:5,value:"May"},
-    {key:6,value:"June"},
-    {key:7,value:"July"},
-    {key:8,value:"August"},
-    {key:9,value:"September"},
-    {key:10,value:"October"},
-    {key:11,value:"November"},
-    {key:12,value:"December"},
-  ];
+  async componentDidMount() {
+    this.fetchInitial();
+  }
 
-  async PostStudent(data) {
-    let res = await SaveStudent(data);
 
-    if (res.statusCode === "001") {
-      Swal.fire({
-        icon: "success",
-        title: "บันทึกข้อมูลสำเร็จ",
-        showConfirmButton: false,
-        timer: 500,
-      });
-      this.props.history.push("/showMajor");
+  async action(data) {
+    let res = "";
+    if (data.stdId === "") {
+      
+      data.birtday = `${data.year}-${data.month}-${data.day}`
+      console.log("INput:",data)
+      res = await SaveStudent(data)
+      // console.log(res)
     } else {
-      Swal.fire({
-        icon: "warning",
-        title: "บันทึกข้อมูลไม่สำเร็จ",
-        showConfirmButton: false,
-        timer: 500,
-      });
+      res = await UpdateStudent(data.stdId, data);
+    }
+
+    if (res !== undefined) {
+      if (res.statusCode === "001") {
+        Swal.fire({
+          icon: "success",
+          title: "บันทึกข้อมูลสำเร็จ",
+          showConfirmButton: false,
+          timer: 500,
+        });
+        this.props.history.push("/showStudent");
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "บันทึกข้อมูลไม่สำเร็จ",
+          showConfirmButton: false,
+          timer: 500,
+        });
+      }
     }
   }
 
+  fetchInitial() {
+    let strInitial = [
+      {
+        titleId: 1,
+        titleName: "นาย",
+      },
+      {
+        titleId: 2,
+        titleName: "นางสาว",
+      },
+      {
+        titleId: 3,
+        titleName: "นาง",
+      },
+    ];
+    this.setState({
+      title: strInitial,
+    });
+  }
+
+  validateConfirmPass(pass,value){
+    let error;
+    if (pass !== value) {
+      error = 'กรุณากรอกให้ตรงกัน😂😂';
+    }
+    return error;
+  }
+
   async componentWillMount() {
+    
     //console.log("t:" + JSON.stringify(this.props.location.state));
     if (this.props.location.state !== undefined) {
       let param = this.props.location.state.value;
       this.setState({
-        StdId: param.StdId,
-        TitleId: param.TitleId,
-        Name: param.Name,
-        Lastname: param.Lastname,
-        Birtday: param.Birtday,
-        Phone: param.Phone,
-        Email: param.Email,
-        Address: param.Address,
-        DistrictId: param.DistrictId,
-        Amphur: param.Amphur,
-        Province: param.Province,
-        Postcode: param.Postcode,
-        Username: param.Username,
-        Password: param.Password
+        stdId:param.stdId,
+        titleId: param.titleId,
+        titleName:param.titleName,
+        name: param.name,
+        lastname: param.lastname,
+        birtday: param.birtday,
+        phone:param.phone,
+        email:param.email,
+        address: param.address,
+        district: param.district,
+        amphur: param.amphur,
+        province: param.province,
+        postcode: param.postcode,
+        username: param.username,
+        password:param.password,
+        year: param.year,
+        month:param.month,
+        day:param.day,
+        salt: param.salt,
       });
     } else {
       console.log("444");
     }
   }
 
-  componentWillUnmount() { }
+  componentWillUnmount() {}
 
 
   render() {
+    var year = new Date().getFullYear();
+    let years = Array.from(new Array(10), (e, index) => year - index);
     return (
       <div>
         <div className="col-12 col-md-12 col-lg-12">
@@ -101,370 +147,372 @@ export default class Profile extends React.Component {
             </div>
             <div className="card-body">
               <Formik
-                // validationSchema={Schema}
-                validate={(values) => {
-                  const errors = {};
-                  if (!values.TitleId) {
-                    errors.TitleId = "จำเป็นต้องระบุข้อมูล";
-                  }
-
-                  if (!values.Name) {
-                    errors.Name = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Lastname) {
-                    errors.Lastname = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Birtday) {
-                    errors.Birtday = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Phone) {
-                    errors.Phone = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Email) {
-                    errors.Email = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Address) {
-                    errors.Address = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.DistrictId) {
-                    errors.DistrictId = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Amphur) {
-                    errors.Amphur = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Province) {
-                    errors.Province = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Postcode) {
-                    errors.Postcode = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Username) {
-                    errors.Username = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  if (!values.Password) {
-                    errors.Password = "จำเป็นต้องระบุข้อมูล";
-                  }
-                  return errors;
-                }}
+                validationSchema={validateStudent}
                 initialValues={{
-                  StdId: this.state.StdId,
-                  TitleId: this.state.TitleId,
-                  Name: this.state.Name,
-                  Lastname: this.state.Lastname,
-                  Birtday: this.state.Birtday,
-                  Phone: this.state.Phone,
-                  Email: this.state.Email,
-                  Address: this.state.Address,
-                  DistrictId: this.state.DistrictId,
-                  Amphur: this.state.Amphur,
-                  Province: this.state.Province,
-                  Postcode: this.state.Postcode,
-                  Username: this.state.Username,
-                  Password: this.state.Password,
+                  stdId:this.state.stdId,
+                  titleId: this.state.titleId,
+                  name: this.state.name,
+                  lastname: this.state.lastname,
+                  birtday: this.state.birtday,
+                  phone:this.state.phone,
+                  email:this.state.email,
+                  address: this.state.address,
+                  district: this.state.district,
+                  amphur: this.state.amphur,
+                  province: this.state.province,
+                  postcode: this.state.postcode,
+                  username: this.state.username,
+                  password:this.state.password,
+                  salt:this.state.salt,
+                  year: this.state.year,
+                  month:this.state.month,
+                  day:this.state.day,
+                  confirm:this.state.confirm,
                 }}
-                // enableReinitialize={true}
+                enableReinitialize={true}
                 onSubmit={(values, { resetForm }) => {
-                  console.log("values:" + values);
+                  // console.log("submit:" + JSON.stringify(values));
                   this.action(values);
                   resetForm();
                 }}
-              > {({
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                isSubmitting,
-              }) => (
-                <form onSubmit={handleSubmit}>
-                  <div className="form-group row">
-                    <div className="col-md-2">
-                      <label>รหัสนักเรียน</label>
-                      <input className="form-control"
+              >
+                {({
+                  values,
+                  errors,
+                  touched,
+                  setFieldValue,
+                  setFieldTouched,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  isSubmitting,
+                }) => (
+                  <Form onSubmit={handleSubmit}>
+                    <div className="form-group row">
+                      <Input
                         type="hidden"
-                        name="StdId"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.StdId}
-
-                      />
-                    </div>
-                    <div className="col-md-3">
-                      <label>คำนำหน้าชื่อ</label>
-                      <select className="form-control">
-                        <option>--กรุณาเลือก--</option>
-                      </select>
-                      <ErrorMessage
-                        component="div"
-                        name="TitleId"
-                        style={{ color: "red" }}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label>ชื่อ</label>
-                      <input type="text" className="form-control"
-                        name="Name"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Name}
-                      />
-
-                      <ErrorMessage
-                        component="div"
-                        name="Name"
-                        style={{ color: "red" }}
-                      />
-                    </div>
-                    <div className="col-md-3">
-                      <label>นามสกุล</label>
-                      <input type="text" className="form-control"
-                        name="Lastname"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Lastname}
-
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Lastname"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                  </div>
-
-                  <div className="form-group row">
-                    <div className="col-md-2">
-                      <label>วันเดือนปีเกิด</label>
-                      <select className="form-control">
-                        <option>--วันที่--</option>
-                        {Array.from(Array(31), (v, i) => (
-
-                                <option value={i + 1}>{i}</option>
-                            ))}
-                           
-                      </select>
-                      <ErrorMessage
-                            component="div"
-                            name="Day"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-2">
-                      <select
+                        name="stdId"
                         className="form-control"
-                        style={{ marginTop: "30px" }} >
-                        <option>--เดือน--</option>
-                        {this.month.map((value, key) => (
-                                <option value={key}>
-                                    {value}
-                                </option>
-                            ))}
-                      </select>
-                      <ErrorMessage
-                            component="div"
-                            name="month"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-2">
-                      <select
-                        className="form-control"
-                        style={{ marginTop: "30px" }}>
-                        <option>--ปี พ.ศ.--</option>
-                        {this.years.map((year, index) => (
-                                <option key={index} value={year + 543}>
-                                    {year + 543}
-                                </option>
-                            ))}
-                      </select>
-                      <ErrorMessage
-                            component="div"
-                            name="year"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-3">
-                      <label>เบอร์โทรศัพท์</label>
-                      <input type="text" className="form-control"
-                        name="Phone"
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        value={values.Phone}
-
+                        value={values.stdId}
                       />
-                       <ErrorMessage
-                            component="div"
-                            name="Phone"
-                            style={{ color: "red" }}
-                          />
+                      <div className="col-md-3">
+                        <label>คำนำหน้าชื่อ</label>
+                        <DropdownList
+                          name="titleId"
+                          defaultInputValue={this.state.titleName}
+                          getOptionLabel={(option) => option.titleName}
+                          getOptionValue={(option) => option.titleId}
+                          options={this.state.title}
+                          placeholder={"--กรุณาเลือก--"}
+                          value={values.title}
+                          onChange={async (v) => {
+                            setFieldValue("titleId", v.titleId);
+                          }}
+                          onBlur={handleBlur}
+                          errors={errors}
+                          touched={touched}
+                        />
+                          
+                      </div>
+                      <div className="col-md-5">
+                        <label>ชื่อ</label>
+                        <Input
+                          type="text"
+                          name="name"
+                          className="form-control"
+                          onChange={(v) => {
+                            setFieldValue("name", v);
+                          }}
+                          errors={errors}
+                          touched={touched}
+                          value={values.name}
+                        />
+                      
+                      </div>
+                      <div className="col-md-4">
+                        <label>นามสกุล</label>
+                        <Input
+                          type="text"
+                          name="lastname"
+                          className="form-control"
+                          onChange={(v) => {
+                            setFieldValue("lastname", v);
+                          }}
+                          value={values.lastname}
+                          errors={errors}
+                          touched={touched}
+                        />
+                      
+                      </div>
+                      {/* <div className="col-md-4">
+                        <input
+                          type="hidden"
+                          name="birtday"
+                          className="form-control"
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          value={values.birtday}
+                          
+                        />
+                      </div> */}
                     </div>
-                    <div className="col-md-3">
-                      <label>อีเมล</label>
-                      <input type="text" className="form-control"
-                        name="Email"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Email}
 
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Email"
-                            style={{ color: "red" }}
-                          />
+                    <div className="form-group row">
+                      <div className="col-md-2">
+                        <label>วันเดือนปีเกิด</label>
+                        <select
+                          name="day"
+                          className="form-control"
+                          value={values.day}
+                          onChange={(e) => {
+                            setFieldValue("day", e.target.value);
+                          }}
+                          errors={errors}
+                          touched={touched}
+                        >
+                          <option value=""> -- วัน -- </option>
+                          {Array.from(Array(31), (e, i) => (
+                            <option value={i + 1 < 10 ? "0" + (i + 1) : i + 1}>
+                              {i + 1}
+                            </option>
+                          ))}
+                        </select>
+                        
+                      </div>
+                      <div className="col-md-2">
+                        <select
+                          name="month"
+                          className="form-control"
+                          style={{ marginTop: "30px" }}
+                          value={values.month}
+                          errors={errors}
+                          touched={touched}
+                          onChange={(e) => {
+                            setFieldValue("month", e.target.value);
+                          }}
+                        >
+                          <option value=""> -- เดือน -- </option>
+                          {monthTH.map((item, index) => (
+                            <option key={item.id} value={item.id}>
+                              {item.monthName}
+                            </option>
+                          ))}
+                        </select>
+                     
+                      </div>
+                      <div className="col-md-2">
+                        <select
+                          name="year"
+                          className="form-control"
+                          style={{ marginTop: "30px" }}
+                          value={values.year}
+                          errors={errors}
+                          touched={touched}
+                          onChange={(e) => {
+                            setFieldValue("year", e.target.value);
+                          }}
+                        >
+                          <option value=""> -- ปี -- </option>
+                          {years.map((year, index) => (
+                            <option key={`year${index}`} value={year}>
+                              {year + 543}
+                            </option>
+                          ))}
+                        </select>
+                       
+                      </div>
+                      <div className="col-md-3">
+                        <label>เบอร์โทรศัพท์</label>
+                        <Input type="text" className="form-control"
+                          name="phone"
+                          onChange={(v) => {
+                            setFieldValue("phone", v);
+                          }}
+                          value={values.phone}
+                          errors={errors}
+                          touched={touched}
+                        />
+                       
+                      </div>
+                      <div className="col-md-3">
+                        <label>อีเมล</label>
+                        <Input type="text" className="form-control"
+                             name="email"
+                             onChange={(v) => {
+                              setFieldValue("email", v);
+                            }}
+                             value={values.email}
+                             errors={errors}
+                             touched={touched}
+                        />
+                          
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="form-group row">
-                    <div className="col-md-12">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="ค้นหาที่อยู่"
-                      />
+                    <div className="form-group row">
+                      <div className="col-md-12">
+                      <SearchAddress
+                          onChange={(value) => {
+                            setFieldValue("use_address", false);
+                            if (value !== "") {
+                              setFieldValue(
+                                "district",
+                                value.subdistrictName
+                              );
+                              setFieldValue("amphur", value.districtName);
+                              setFieldValue("province", value.provinceName);
+                              setFieldValue("postcode", value.postCode);
+                            } else {
+                              setFieldValue("district", "");
+                              setFieldValue("amphur", "");
+                              setFieldValue("province", "");
+                              setFieldValue("postcode", "");
+                            }
+                          }}
+                          name="SearchAddress"
+                          placeholder="ค้นหา"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="form-group row">
-                    <div className="col-md-3">
-                      <label>บ้านเลขที่</label>
-                      <input type="text" className="form-control"
+                    <div className="form-group row">
+                      <div className="col-md-3">
+                        <label>บ้านเลขที่</label>
+                        <Input type="text" className="form-control"
+                        
+                        name="address"
+                        onChange={(v) => {
+                          setFieldValue("address", v);
+                        }}
+                        value={values.address}
+                        errors={errors}
+                        touched={touched}
+                        />
+                        
+                      </div>
+                      <div className="col-md-3">
+                        <label>ตำบล</label>
+                        <Input type="text" className="form-control"
+                            name="district"
+                            onChange={(v) => {
+                              setFieldValue("district", v);
+                            }}
+                            value={values.district}
+                            errors={errors}
+                            touched={touched}
+                        />
+                          \
+                      </div>
+                      <div className="col-md-2">
+                        <label>อำเภอ</label>
+                        <Input type="text" className="form-control"
 
-                        name="Address"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Address}
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Address"
-                            style={{ color: "red" }}
-                          />
+                        name="amphur"
+                        onChange={(v) => {
+                          setFieldValue("amphur", v);
+                        }}
+                        value={values.amphur}
+                        errors={errors}
+                        touched={touched}
+                        />
+                     
+                      </div>
+                      <div className="col-md-2">
+                        <label>จังหวัด</label>
+                        <Input type="text" className="form-control"
+                        
+                        name="province"
+                        onChange={(v) => {
+                          setFieldValue("province", v);
+                        }}
+                        value={values.province}
+                        errors={errors}
+                        touched={touched}
+
+                        />
+                       
+                      </div>
+                      <div className="col-md-2">
+                        <label>รหัสไปรษณีย์</label>
+                        <Input type="text" className="form-control" 
+                        name="postcode"
+                        onChange={(v) => {
+                          setFieldValue("postcode", v);
+                        }}
+                        value={values.postcode}
+                        errors={errors}
+                        touched={touched}
+                        />
+                       
+                      </div>
                     </div>
-                    <div className="col-md-3">
-                      <label>ตำบล</label>
-                      <input type="text" className="form-control"
-                        name="District"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.District}
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="District"
-                            style={{ color: "red" }}
-                          />
+
+                    <hr />
+                    <h5>ข้อมูลผู้ใช้งาน</h5>
+                    <div className="form-group row">
+                      <div className="col-md-4">
+                        <label>ชื่อผู้ใช้งาน</label>
+                        <Input type="text" className="form-control"
+                        
+                        name="username"
+                        onChange={(v) => {
+                          setFieldValue("username", v);
+                        }}
+                        errors={errors}
+                        touched={touched}
+                        value={values.username}
+
+                        />
+                       
+                      </div>
+                      <div className="col-md-4">
+                        <label>รหัสผ่าน</label>
+                        <Input
+                          type="password"
+                          className="form-control"
+                          name="password"
+                          onChange={(v) => {
+                            setFieldValue("password", v);
+                          }}
+                          errors={errors}
+                          touched={touched}
+                          value={values.password}
+                        />
+                      
+                      </div>
+                      <div className="col-md-4">
+                        <label>ยืนยันรหัสผ่าน</label>
+                        <Input 
+                          type="password"
+                          className="form-control"
+                          name="confirm"
+                          autoComplete="off"
+                          // validate={value => this.validateConfirmPass(values.password,value)}
+                          onChange={async (e) => {
+                            setFieldValue("confirm", e);
+                        
+                          }}
+                          value={values.confirm}
+                          errors={errors}
+                          touched={touched}
+                        />
+                        <span class="error" style={{ color: "red" }}>
+              {errors.confirm}
+            </span>
+                      </div>
                     </div>
-                    <div className="col-md-2">
-                      <label>อำเภอ</label>
-                      <input type="text" className="form-control"
 
-                        name="Amphur"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Amphur}
-
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Amphur"
-                            style={{ color: "red" }}
-                          />
+                    <div className="form-group row">
+                      <div className="col-sm-12 text-center">
+                        <button type="submit" disabled={isSubmitting} className="btn btn-primary">บันทึก</button> &nbsp;
+                        &nbsp;
+                        <button  type="reset"  className="btn btn-secondary">ล้างข้อมูล</button>
+                      </div>
                     </div>
-                    <div className="col-md-2">
-                      <label>จังหวัด</label>
-                      <input type="text" className="form-control"
-
-                        name="Province"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Province}
-
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Province"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-2">
-                      <label>รหัสไปรษณีย์</label>
-                      <input type="text" className="form-control"
-                        name="Postcode"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Postcode}
-
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Postcode"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                  </div>
-
-                  <hr />
-                  <h5>ข้อมูลผู้ใช้งาน</h5>
-                  <div className="form-group row">
-                    <div className="col-md-4">
-                      <label>ชื่อผู้ใช้งาน</label>
-                      <input type="text" className="form-control"
-
-                        name="Username"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Username}
-                      />
-                       <ErrorMessage
-                            component="div"
-                            name="Username"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-4">
-                      <label>รหัสผ่าน</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="password"
-
-                        name="Password"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.Password}
-                      />
-                        <ErrorMessage
-                            component="div"
-                            name="Password"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                    <div className="col-md-4">
-                      <label>ยืนยันรหัสผ่าน</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="ConPassword"
-                      />
-                        <ErrorMessage
-                            component="div"
-                            name="ConPassword"
-                            style={{ color: "red" }}
-                          />
-                    </div>
-                  </div>
-
-                  <div className="form-group row">
-                    <div className="col-sm-12 text-center">
-                      <button class="btn btn-primary" disabled={isSubmitting}>บันทึก</button> &nbsp; &nbsp;
-                      <button class="btn btn-secondary">ล้างข้อมูล</button>
-                    </div>
-                  </div>
-                </form>
-              )
-                }
+                  </Form>
+                )}
               </Formik>
             </div>
           </div>

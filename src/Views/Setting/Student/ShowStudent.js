@@ -3,7 +3,7 @@ import Pagination from "@material-ui/lab/Pagination";
 import Swal from "sweetalert2";
 import Icon from "../../../assets/icons/icons";
 import SVGarrowClockwise from "../../../assets/svgs/SVGarrowClockwise";
-import { GetAllStudent } from "../../../services/student.service";
+import { GetAllStudent,DeleteStudent } from "../../../services/student.service";
 import {useHistory} from "react-router-dom"
 
 export default function ShowStudent() {
@@ -17,14 +17,15 @@ export default function ShowStudent() {
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
-  useEffect(fetchData, [pageNo, pageSize]);
+  useEffect(fetchData, [pageNo, pageSize,search]);
 
   async function fetchData() {
-    const res = await GetAllStudent(pageSize, pageNo);
-    if (res.statusCode == "001") {
+    const res = await GetAllStudent(pageSize, pageNo,search);
+    if (res.statusCode == "002") {
       let pagination = res.pagin;
       if (pagination.totalRow > 0) {
         setData(res.data);
+        console.log(res.data)
         setPage({
           currentPage: pagination.currentPage,
           lastPage: pagination.totlaPage,
@@ -34,6 +35,40 @@ export default function ShowStudent() {
     } else {
     }
   }
+
+  const deleteData = async function (e, stuId, prmName) {
+    e.preventDefault();
+    const sweetConfirm = await new Swal({
+      className: "bg-modal-red",
+      icon: "question",
+      iconColor: "red",
+      //dangerMode: true,
+      text: "คุณต้องการลบข้อมูลคณะ" + prmName + "ใช่หรือไม่?",
+      showCancelButton: true,
+      confirmButtonText: "ใช่",
+      cancelButtonText: "ยกเลิก",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        return true;
+      }
+    });
+
+    if (sweetConfirm) {
+      const result = await DeleteStudent(stuId);
+      if (result.statusCode === "001") {
+        new Swal({
+          title: "สำเร็จ!",
+          text: "",
+          icon: "success",
+          showConfirmButton: false,
+          button: "ปิด",
+          timer: 1500,
+        });
+        fetchData();
+      }
+    }
+  };
+
 
   const searchData = (e) => {
     e.preventDefault();
@@ -137,7 +172,7 @@ export default function ShowStudent() {
                       <tr className="text-center">
                         <th>#</th>
                         <th>รหัสนักศึกษา</th>
-                        <th>ชื่อนักศึกษา</th>
+                        <th>ชื่อ-นามสกุล</th>
                         <th>เบอร์โทรศัพท์</th>
                         <th>อีเมล์</th>
                         <th>ที่อยู่</th>
@@ -151,19 +186,20 @@ export default function ShowStudent() {
                       {data.map((value, index) => (
                         <tr key={value.stdId}>
                           <td>{index + 1}</td>
-                          <td>{value.name}</td>
-                          <td>{value.lastName}</td>
+                          <td>{value.stdId}</td>
+                          <td>{value.name + " " + value.lastname}</td>
                           <td>{value.phone}</td>
                           <td>{value.email}</td>
+                          <td>{value.address}</td>
                           <td>{value.amphur}</td>
                           <td>{value.district}</td>
                           <td>{value.province}</td>
                           <td className="text-center">
                             <button
                               className="btn btn-warning btn-sm"
-                              // onClick={(e) => {
-                              //   history.push("/FMajor", { value: value });
-                              // }}
+                              onClick={(e) => {
+                                history.push("/Profile", { value: value });
+                              }}
                             >
                               <Icon
                                 icon="pencil"
@@ -176,14 +212,14 @@ export default function ShowStudent() {
                             &nbsp;
                             <button
                               className="btn btn-danger btn-sm"
-                              // onClick={(e) => {
-                              //   deleteData(
-                              //     e,
-                              //     value.majorCode,
-                              //     value.majorName
-                              //   );
-                              //   return false;
-                              // }}
+                              onClick={(e) => {
+                                DeleteStudent(
+                                  e,
+                                  value.stdId,
+                                  value.name
+                                );
+                                return false;
+                              }}
                             >
                               <Icon
                                 icon="trash"
