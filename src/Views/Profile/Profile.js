@@ -279,7 +279,8 @@ export default class Profile extends React.Component {
                             </option>
                           ))}
                         </select>
-                        
+                        <span class="error" style={{ color: "red" }}>
+              {errors.day}</span>
                       </div>
                       <div className="col-md-2">
                         <select
@@ -300,7 +301,8 @@ export default class Profile extends React.Component {
                             </option>
                           ))}
                         </select>
-                     
+                        <span class="error" style={{ color: "red" }}>
+              {errors.month}</span>
                       </div>
                       <div className="col-md-2">
                         <select
@@ -321,7 +323,8 @@ export default class Profile extends React.Component {
                             </option>
                           ))}
                         </select>
-                       
+                        <span class="error" style={{ color: "red" }}>
+              {errors.year}</span>
                       </div>
                       <div className="col-md-3">
                         <label>เบอร์โทรศัพท์</label>

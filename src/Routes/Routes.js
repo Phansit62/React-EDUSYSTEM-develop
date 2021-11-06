@@ -7,7 +7,7 @@ import PrivateLayout from "../Layout/Layout";
 //import NotFound from "../views/errors/NotFound";
 import { connect } from "react-redux";
 import { AUTHEN, USERINFO } from "../Actions/authen";
-
+import ShowCoures from '../Views/BookCoruse/ShowCorues';
 import AttendClass from "../Views/AttendClass/AttendClass";
 import TechSchedule from "../Views/TechSchedule/TechSchedule";
 import ShowMajor from "../Views/Setting/Major/ShowMajor";
@@ -37,6 +37,7 @@ function Routers(props) {
               <Route path="/FFaculty" component={FFaculty} />
               <Route path="/FMajor" component={FMajor} />
               <Route path="/Profile" component={FProfile} />
+              <Route path="/BookCoures" component={ShowCoures} />
             </Switch>
           </PrivateLayout>
         </Route>
